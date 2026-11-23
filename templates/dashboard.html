@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block title %}Panel principal | Basura Cero Guía{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+
+{% block content %}
+
+<section class="dashboard-section">
+    <div class="container">
+
+        <div class="mb-4">
+            <h1 class="page-heading">Panel de gestión 🌿</h1>
+            <p class="page-description">
+                Registrá nuevos basurales y consultá las denuncias existentes.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- FORMULARIO Y MAPA -->
+            <div class="col-lg-5">
+
+                <div class="panel-card">
+
+                    <div class="panel-header">
+                        📍 Nueva denuncia con Inteligencia Artificial
+                    </div>
+
+                    <div class="panel-body">
+
+                        <form method="POST"
+                              action="{{ url_for('denunciar') }}"
+                              enctype="multipart/form-data"
+                              id="denunciaForm">
+
+                            <div class="mb-3">
+                                <label for="ciudad" class="form-label">
+                                    Ciudad o localidad
+                                </label>
+
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        id="ciudad"
+                                        class="form-control"
+                                        placeholder="Ej: Arroyito, Córdoba"
+                                        value="Arroyito, Córdoba">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="buscarCiudad()">
+                                        Buscar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="calle" class="form-label">
+                                    Buscar una dirección
+                                </label>
+
+                                <div class="input-group">
+                                    <input
+                                        type="text"
+                                        id="calle"
+                                        class="form-control"
+                                        placeholder="Ej: San Martín 500">
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="buscarCalle()">
+                                        Localizar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Ubicación en el mapa</label>
+
+                                <div id="map"></div>
+
+                                <p class="map-help">
+                                    Seleccioná el lugar exacto haciendo clic sobre el mapa.
+                                </p>
+                            </div>
+
+                            <input type="hidden" name="lat" id="lat">
+                            <input type="hidden" name="lng" id="lng">
+                            <input type="hidden" name="direccion" id="direccion">
+
+                            <div class="mb-3 mt-4">
+                                <label for="imagen" class="form-label">
+                                    Fotografía del basural
+                                </label>
+
+                                <input
+                                    type="file"
+                                    class="form-control"
+                                    name="imagen"
+                                    id="imagen"
+                                    accept="image/*"
+                                    required>
+
+                                <small class="text-muted">
+                                    Subí una imagen para que la IA pueda analizarla.
+                                </small>
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary-custom w-100"
+                                id="btnDenunciar"
+                                disabled>
+                                📷 Enviar denuncia
+                            </button>
+
+                            <p class="map-help text-center mt-2" id="mapMessage">
+                                Primero tenés que marcar una ubicación en el mapa.
+                            </p>
+
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- LISTADO DE DENUNCIAS -->
+            <div class="col-lg-7">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <div>
+                        <h2 class="page-heading" style="font-size: 27px;">
+                            {% if current_user.is_admin %}
+                                Panel de control
+                            {% else %}
+                                Mis denuncias
+                            {% endif %}
+                        </h2>
+
+                        <p class="page-description mb-0">
+                            {% if current_user.is_admin %}
+                                Seguimiento de todas las denuncias registradas.
+                            {% else %}
+                                Consultá el estado de tus reportes.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <span class="badge rounded-pill text-bg-light border p-2">
+                        {{ denuncias|length }} denuncias
+                    </span>
+                </div>
+
+                {% if denuncias %}
+
+                    {% for d in denuncias %}
+
+                        <div class="report-card">
+
+                            <div class="row g-0">
+
+                                <div class="col-md-5">
+                                    {% if d.imagen %}
+                                        <img
+                                            src="{{ url_for('static', filename='uploads/' + d.imagen) }}"
+                                            class="report-image"
+                                            alt="Fotografía de la denuncia">
+                                    {% else %}
+                                        <div class="report-image d-flex justify-content-center align-items-center">
+                                            <span class="text-muted">Sin fotografía</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-7">
+                                    <div class="report-content">
+
+                                        <h3 class="report-address">
+                                            📍 {{ d.direccion }}
+                                        </h3>
+
+                                        <div class="report-info">
+                                            <strong>Estado:</strong>
+
+                                            {% if d.estado == 'Pendiente' %}
+                                                <span class="status-badge status-pendiente">
+                                                    Pendiente
+                                                </span>
+                                            {% elif d.estado == 'En Proceso' %}
+                                                <span class="status-badge status-proceso">
+                                                    En proceso
+                                                </span>
+                                            {% else %}
+                                                <span class="status-badge status-revisada">
+                                                    Revisada
+                                                </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <hr>
+
+                                        <p class="report-info">
+                                            🤖 <strong>Tipo de residuo:</strong>
+                                            {{ d.ia_tipo }}
+                                            {% if d.ia_similitud is not none %}
+                                                (Certeza: {{ d.ia_similitud }}%)
+                                            {% endif %}
+                                        </p>
+
+                                        <p class="report-info">
+                                            📊 <strong>Nivel:</strong>
+                                            {{ d.ia_nivel }}
+                                        </p>
+
+                                        <p class="report-info">
+                                            🔎 <strong>Duplicados:</strong>
+                                            {{ d.ia_duplicados if d.ia_duplicados is defined else 'Información no disponible' }}
+                                        </p>
+
+                                        {% if current_user.is_admin %}
+
+                                            <p class="report-info text-muted">
+                                                Usuario ID: {{ d.user_id }}
+                                            </p>
+
+                                            <div class="admin-actions">
+
+                                                <form method="POST"
+                                                      action="{{ url_for('actualizar_estado', id=d.id) }}"
+                                                      class="d-flex gap-2 flex-wrap">
+
+                                                    <select name="estado" class="form-select form-select-sm">
+
+                                                        <option value="Pendiente"
+                                                            {% if d.estado == 'Pendiente' %}selected{% endif %}>
+                                                            Pendiente
+                                                        </option>
+
+                                                        <option value="En Proceso"
+                                                            {% if d.estado == 'En Proceso' %}selected{% endif %}>
+                                                            En proceso
+                                                        </option>
+
+                                                        <option value="Revisada"
+                                                            {% if d.estado == 'Revisada' %}selected{% endif %}>
+                                                            Revisada
+                                                        </option>
+
+                                                    </select>
+
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        Actualizar
+                                                    </button>
+
+                                                </form>
+
+                                                <form method="POST"
+                                                      action="{{ url_for('eliminar_denuncia', id=d.id) }}"
+                                                      onsubmit="return confirm('¿Estás seguro de que querés eliminar esta denuncia?');">
+
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        Eliminar
+                                                    </button>
+
+                                                </form>
+
+                                            </div>
+
+                                        {% endif %}
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="empty-state">
+                        <div style="font-size: 45px; margin-bottom: 12px;">🌱</div>
+                        <h4>No hay denuncias todavía</h4>
+                        <p class="mb-0">
+                            Cuando se registre una denuncia, aparecerá en esta sección.
+                        </p>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Centrado inicial aproximado (Córdoba)
+    const map = L.map('map').setView([-31.4201, -64.1888], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marcador = null;
+
+    const latInput = document.getElementById('lat');
+    const lngInput = document.getElementById('lng');
+    const direccionInput = document.getElementById('direccion'); // El oculto que va a la BD
+    const calleInput = document.getElementById('calle');         // El visible que ve el usuario
+    const btnDenunciar = document.getElementById('btnDenunciar');
+    const mapMessage = document.getElementById('mapMessage');
+
+    function colocarMarcador(lat, lng, direccion = '') {
+        if (marcador) {
+            map.removeLayer(marcador);
+        }
+
+        marcador = L.marker([lat, lng]).addTo(map);
+        map.setView([lat, lng], 16); // Hace zoom automáticamente al punto marcado
+
+        latInput.value = lat;
+        lngInput.value = lng;
+
+        if (direccion) {
+            direccionInput.value = direccion;
+        } else {
+            direccionInput.value = 'Ubicación seleccionada en el mapa';
+        }
+
+        marcador.bindPopup('Ubicación seleccionada').openPopup();
+
+        btnDenunciar.disabled = false;
+        mapMessage.textContent = '¡Ubicación seleccionada correctamente!';
+    }
+
+    // CUANDO HACEMOS CLIC EN EL MAPA
+    map.on('click', async function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        colocarMarcador(lat, lng);
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+            );
+
+            const data = await response.json();
+
+            if (data.display_name) {
+                direccionInput.value = data.display_name; // Se guarda para la BD
+                calleInput.value = data.display_name;     // ¡Ahora sí se muestra en el renglón!
+            }
+
+        } catch (error) {
+            console.log('No se pudo obtener la dirección exacta.');
+        }
+    });
+
+    // BOTÓN BUSCAR CIUDAD
+    async function buscarCiudad() {
+        const ciudad = document.getElementById('ciudad').value.trim();
+
+        if (!ciudad) {
+            alert('Ingresá una ciudad o localidad.');
+            return;
+        }
+        // Le agregamos ", Argentina" por detrás para que no busque ciudades homónimas en otros países
+        await buscarUbicacion(ciudad + ', Argentina', true);
+    }
+
+    // BOTÓN LOCALIZAR CALLE
+    async function buscarCalle() {
+        const calle = calleInput.value.trim();
+        const ciudad = document.getElementById('ciudad').value.trim();
+
+        if (!calle) {
+            alert('Ingresá una dirección.');
+            return;
+        }
+
+        // Buscamos Calle + Ciudad + Argentina para máxima precisión
+        await buscarUbicacion(calle + ', ' + ciudad + ', Argentina', false);
+    }
+
+    async function buscarUbicacion(texto, esSoloCiudad = false) {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(texto)}`
+            );
+
+            const resultados = await response.json();
+
+            if (resultados.length === 0) {
+                alert('No se encontró esa ubicación. Intentá agregar más detalles (ej: altura de la calle).');
+                return;
+            }
+
+            const lugar = resultados[0];
+            const lat = parseFloat(lugar.lat);
+            const lng = parseFloat(lugar.lon);
+
+            if (esSoloCiudad) {
+                // Si solo buscó ciudad, solo centramos la cámara, no clavamos marcador
+                map.setView([lat, lng], 13);
+            } else {
+                // Si buscó calle, clavamos marcador y actualizamos el renglón
+                colocarMarcador(lat, lng, lugar.display_name);
+                calleInput.value = lugar.display_name;
+            }
+
+        } catch (error) {
+            alert('Error de conexión al buscar la ubicación.');
+        }
+    }
+
+    // Validación final antes de enviar
+    document.getElementById('denunciaForm').addEventListener('submit', function(e) {
+        if (!latInput.value || !lngInput.value) {
+            e.preventDefault();
+            alert('Primero seleccioná una ubicación en el mapa.');
+        }
+    });
+</script>
+
+{% endblock %}

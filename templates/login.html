@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión | Basura Cero Guía{% endblock %}
+
+{% block content %}
+
+<section class="auth-section">
+    <div class="auth-card">
+
+        <div class="text-center mb-4">
+            <div class="feature-icon mx-auto">🌿</div>
+            <h1 class="auth-title">¡Qué bueno verte!</h1>
+            <p class="auth-subtitle">
+                Ingresá a tu cuenta para continuar.
+            </p>
+        </div>
+
+        <form method="POST">
+
+            <div class="mb-3">
+                <label for="username" class="form-label">Usuario</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    name="username"
+                    placeholder="Ingresá tu usuario"
+                    required
+                    autocomplete="username">
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    placeholder="Ingresá tu contraseña"
+                    required
+                    autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom">
+                Iniciar sesión →
+            </button>
+
+        </form>
+
+        <p class="text-center mt-4 mb-0">
+            ¿Todavía no tenés una cuenta?
+            <a href="{{ url_for('register') }}" class="auth-link">Registrate</a>
+        </p>
+
+    </div>
+</section>
+
+{% endblock %}

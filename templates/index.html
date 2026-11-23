@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Basura Cero Guía | Cuidemos nuestra ciudad{% endblock %}
+
+{% block content %}
+
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+
+            <div class="col-lg-7">
+                <span class="hero-label">🌿 TECNOLOGÍA PARA UN FUTURO MÁS LIMPIO</span>
+
+                <h1 class="hero-title">
+                    Una ciudad más limpia
+                    comienza con <span>nosotros.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Basura Cero Guía es una plataforma que conecta a los ciudadanos
+                    con el cuidado del ambiente, facilitando la identificación y
+                    localización de basurales urbanos.
+                </p>
+
+                <p class="hero-note">
+                    Con ayuda de la Inteligencia Artificial, podés informar sobre
+                    residuos en tu ciudad, subir una fotografía y conocer el tipo
+                    de basura detectada. Cada denuncia es un paso hacia un entorno
+                    más saludable.
+                </p>
+
+                <div class="hero-buttons">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom">
+                            Ir al panel principal →
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary-custom">
+                            Crear una cuenta →
+                        </a>
+
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-custom">
+                            Iniciar sesión
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="hero-illustration">
+                    <span class="hero-decoration decoration-one">🍃</span>
+                    <span class="earth">🌎</span>
+                    <span class="hero-decoration decoration-two">🌱</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="container">
+
+        <div class="text-center">
+            <h2 class="section-heading">¿Cómo funciona?</h2>
+            <p class="section-subtitle">
+                Una herramienta sencilla para generar un impacto positivo.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">📍</div>
+                    <h4>Localizá</h4>
+                    <p>
+                        Marcá en el mapa el lugar donde encontraste residuos
+                        o un basural para que pueda ser identificado.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h4>Identificá con IA</h4>
+                    <p>
+                        Subí una fotografía y nuestro sistema de Inteligencia
+                        Artificial analizará el tipo de residuo detectado.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">🌳</div>
+                    <h4>Generá un cambio</h4>
+                    <p>
+                        Las denuncias permiten visualizar los problemas
+                        ambientales y realizar un seguimiento de cada situación.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container text-center py-3">
+        <h2 class="section-heading">El cambio empieza con una acción.</h2>
+        <p class="section-subtitle mb-4">
+            Informar sobre un basural también es una forma de cuidar nuestro entorno.
+        </p>
+
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary-custom">
+                Realizar una denuncia
+            </a>
+        {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary-custom">
+                Sumate a la comunidad
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
