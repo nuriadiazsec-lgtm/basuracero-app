@@ -166,6 +166,23 @@ def eliminar_denuncia(id):
 with app.app_context():
     os.makedirs('static/uploads', exist_ok=True)
     db.create_all()
+    
+    # Crear o actualizar el usuario administrador automáticamente
+    admin_email = 'nuriadiaz.sec@institutolamerced.edu.ar'
+    admin_pass = 'Admin1234'
+    
+    admin = User.query.filter_by(username=admin_email).first()
+    if not admin:
+        nuevo_admin = User(
+            username=admin_email,
+            password=generate_password_hash(admin_pass),
+            is_admin=True
+        )
+        db.session.add(nuevo_admin)
+    else:
+        admin.password = generate_password_hash(admin_pass)
+        admin.is_admin = True
+    db.session.commit()
 
 if __name__ == '__main__':
     app.run(debug=True)
